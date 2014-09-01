@@ -1,0 +1,62 @@
+canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+html {
+	height: 100%;
+}
+body {
+	overflow: hidden;
+	display: table;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	background: #000;
+}
+form {
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;
+	-webkit-perspective: 600;
+	-webkit-transform-style: preserve-3d;
+	-webkit-transform: translateZ(0);
+}
+input {
+	position: relative;
+	display: inline-block;
+	text-align: center;
+	font: 200 72px Helvetica Neue, sans-serif;
+	outline: 0;
+	background: rgba(72, 72, 72, .4);
+	padding: 24px;
+	margin: 0;
+	color: #fff;
+	border: 0;
+	/*border: 3px solid #888;*/
+	border-radius: 16px;
+	-webkit-transition: background .5s;
+	/*-webkit-transform-origin: 0 bottom;*/
+}
+.in-fireworks-show input {
+	/*-webkit-filter: blur(64px);*/
+	/*-webkit-transform: translateZ(500px);*/
+	/*-webkit-transform: rotateX(90deg);*/
+	/*opacity: 0;*/
+	background: 0;
+	color: transparent;
+}
+input::-webkit-input-placeholder {
+	color: rgba(255, 255, 255, .3);
+}
+.shadow {
+	position: absolute;
+	bottom: -100px;
+	height: 100px;
+	left: -256px;
+	right: -256px;
+	background: #000;
+	box-shadow: 0 0 256px #000;
+}
