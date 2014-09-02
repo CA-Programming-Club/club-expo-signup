@@ -7,7 +7,9 @@ form.addEventListener "submit", (e) ->
 	# TODO: add fade out of audio visualizer
 	document.body.classList.add "in-fireworks-show"
 	fireworksName = form.name.value
-	audioVisualizer.lightness = 15
+	setTimeout () -> 
+		audioVisualizer.lightness = 15
+	, 3000
 	new ParticleVisualizer fireworksName
 
 main = ->
@@ -72,11 +74,12 @@ class ParticleVisualizer
 		# above/below: subtract or add 4 * the canvas width (c.width)
 		@startTime = +new Date
 		@particles = []
+		@size = 5
 		skip = 0
 		for x in [0...c.width]
 			for y in [0...c.height]
 				skip = skip + 1
-				if skip % 3 != 0
+				if skip % @size != 0
 					continue
 				i = (x + y * c.width) * 4
 				continue unless data[i+3]
@@ -85,13 +88,20 @@ class ParticleVisualizer
 				rx = xLoc - innerWidth / 2
 				ry = yLoc - innerHeight / 2
 				magnitude = Math.sqrt rx * rx + ry * ry
+				tvx = 1 * Math.random() * (-20 + (50 / Math.abs(rx))) * (rx / magnitude)
+				tvy = 1.5 * Math.random() * (-20 + (50 / Math.abs(ry))) * (ry / magnitude)
+				vMagnitude = Math.sqrt tvx * tvx + tvy * tvy
 				@particles.push {
 					x: xLoc
 					y: yLoc
-					vx: .5 * (-20 + (50 / Math.abs(rx))) * (rx / magnitude)
-					vy: .75 * (-20 + (50 / Math.abs(ry))) * (ry / magnitude)
+					vx: (tvx + 7 * tvx / vMagnitude) * innerWidth / 750
+					vy: (tvy + 7 * tvy / vMagnitude) * innerHeight / 650
 					color: "rgba(#{data[i]},#{data[i+1]},#{data[i+2]},#{data[i+3]})"
 				}
+		
+		setTimeout () =>
+			@cx.clearRect 0, 0, innerWidth, innerHeight, false
+		, 4010
 
 		requestAnimationFrame @draw
 
@@ -100,8 +110,9 @@ class ParticleVisualizer
 		h = @canvas.height = innerHeight
 		for p in @particles
 			@cx.fillStyle = p.color
-			@cx.fillRect p.x | 0, p.y | 0, 3, 3
-
+			@cx.fillRect p.x | 0, p.y | 0, @size, @size
+			p.vx *= 0.99
+			p.vy *= 0.99
 			p.x += p.vx
 			p.y += p.vy
 		if (+new Date) - @startTime < 4000	

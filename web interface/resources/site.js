@@ -16,7 +16,9 @@
     e.preventDefault();
     document.body.classList.add("in-fireworks-show");
     fireworksName = form.name.value;
-    audioVisualizer.lightness = 15;
+    setTimeout(function() {
+      return audioVisualizer.lightness = 15;
+    }, 3000);
     return new ParticleVisualizer(fireworksName);
   });
 
@@ -84,7 +86,7 @@
     ParticleVisualizer.prototype.canvas = document.getElementById("particle-canvas");
 
     function ParticleVisualizer(name) {
-      var c, cx, data, i, imageData, magnitude, rx, ry, skip, w, x, xLoc, y, yLoc, _i, _j, _ref, _ref1;
+      var c, cx, data, i, imageData, magnitude, rx, ry, skip, tvx, tvy, vMagnitude, w, x, xLoc, y, yLoc, _i, _j, _ref, _ref1;
       this.name = name;
       this.draw = __bind(this.draw, this);
       this.cx = this.canvas.getContext("2d");
@@ -102,11 +104,12 @@
       data = imageData.data;
       this.startTime = +(new Date);
       this.particles = [];
+      this.size = 5;
       skip = 0;
       for (x = _i = 0, _ref = c.width; 0 <= _ref ? _i < _ref : _i > _ref; x = 0 <= _ref ? ++_i : --_i) {
         for (y = _j = 0, _ref1 = c.height; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; y = 0 <= _ref1 ? ++_j : --_j) {
           skip = skip + 1;
-          if (skip % 3 !== 0) {
+          if (skip % this.size !== 0) {
             continue;
           }
           i = (x + y * c.width) * 4;
@@ -118,15 +121,23 @@
           rx = xLoc - innerWidth / 2;
           ry = yLoc - innerHeight / 2;
           magnitude = Math.sqrt(rx * rx + ry * ry);
+          tvx = 1 * Math.random() * (-20 + (50 / Math.abs(rx))) * (rx / magnitude);
+          tvy = 1.5 * Math.random() * (-20 + (50 / Math.abs(ry))) * (ry / magnitude);
+          vMagnitude = Math.sqrt(tvx * tvx + tvy * tvy);
           this.particles.push({
             x: xLoc,
             y: yLoc,
-            vx: .5 * (-20 + (50 / Math.abs(rx))) * (rx / magnitude),
-            vy: .75 * (-20 + (50 / Math.abs(ry))) * (ry / magnitude),
+            vx: (tvx + 7 * tvx / vMagnitude) * innerWidth / 750,
+            vy: (tvy + 7 * tvy / vMagnitude) * innerHeight / 650,
             color: "rgba(" + data[i] + "," + data[i + 1] + "," + data[i + 2] + "," + data[i + 3] + ")"
           });
         }
       }
+      setTimeout((function(_this) {
+        return function() {
+          return _this.cx.clearRect(0, 0, innerWidth, innerHeight, false);
+        };
+      })(this), 4010);
       requestAnimationFrame(this.draw);
     }
 
@@ -138,7 +149,9 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         p = _ref[_i];
         this.cx.fillStyle = p.color;
-        this.cx.fillRect(p.x | 0, p.y | 0, 3, 3);
+        this.cx.fillRect(p.x | 0, p.y | 0, this.size, this.size);
+        p.vx *= 0.99;
+        p.vy *= 0.99;
         p.x += p.vx;
         p.y += p.vy;
       }
