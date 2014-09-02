@@ -16,7 +16,7 @@
     e.preventDefault();
     document.body.classList.add("in-fireworks-show");
     fireworksName = form.name.value;
-    audioVisualizer.lightness = 8;
+    audioVisualizer.lightness = 15;
     return new ParticleVisualizer(fireworksName);
   });
 
@@ -54,9 +54,9 @@
 
     AudioVisualizer.prototype.damping = .03;
 
-    AudioVisualizer.prototype.lightness = 20;
+    AudioVisualizer.prototype.lightness = 30;
 
-    AudioVisualizer.prototype._lightness = 20;
+    AudioVisualizer.prototype._lightness = 30;
 
     AudioVisualizer.prototype.poll = function() {
       var h, i, w, x, _i, _len, _ref, _results;
@@ -81,33 +81,48 @@
   })();
 
   ParticleVisualizer = (function() {
-    ParticleVisualizer.prototype.canvas = document.getElementById("audio-canvas");
+    ParticleVisualizer.prototype.canvas = document.getElementById("particle-canvas");
 
     function ParticleVisualizer(name) {
-      var c, cx, data, i, imageData, w, x, y, _i, _j, _ref, _ref1;
+      var c, cx, data, i, imageData, magnitude, rx, ry, skip, w, x, xLoc, y, yLoc, _i, _j, _ref, _ref1;
       this.name = name;
       this.draw = __bind(this.draw, this);
       this.cx = this.canvas.getContext("2d");
       c = document.createElement("canvas");
       cx = c.getContext("2d");
-      cx.textBaseline = "middle";
+      cx.textBaseline = "alphabetic";
       cx.font = "200 72px Helvetica Neue, sans-serif";
       w = cx.measureText(name).width;
       c.height = 72 * 1.5;
       c.width = w;
-      cx.fillText(name, 0, c.height / 2);
+      cx.font = "200 72px Helvetica Neue, sans-serif";
+      cx.fillStyle = "#fff";
+      cx.fillText(name, 0, 75 * 1.05);
       imageData = cx.getImageData(0, 0, c.width, c.height);
       data = imageData.data;
+      this.startTime = +(new Date);
       this.particles = [];
+      skip = 0;
       for (x = _i = 0, _ref = c.width; 0 <= _ref ? _i < _ref : _i > _ref; x = 0 <= _ref ? ++_i : --_i) {
         for (y = _j = 0, _ref1 = c.height; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; y = 0 <= _ref1 ? ++_j : --_j) {
+          skip = skip + 1;
+          if (skip % 3 !== 0) {
+            continue;
+          }
           i = (x + y * c.width) * 4;
           if (!data[i + 3]) {
             continue;
           }
+          xLoc = (innerWidth - c.width) / 2 + 2 + x;
+          yLoc = (innerHeight - c.height) / 2 + 2 + y;
+          rx = xLoc - innerWidth / 2;
+          ry = yLoc - innerHeight / 2;
+          magnitude = Math.sqrt(rx * rx + ry * ry);
           this.particles.push({
-            x: i % c.width,
-            y: Math.floor(i / c.width),
+            x: xLoc,
+            y: yLoc,
+            vx: .5 * (-20 + (50 / Math.abs(rx))) * (rx / magnitude),
+            vy: .75 * (-20 + (50 / Math.abs(ry))) * (ry / magnitude),
             color: "rgba(" + data[i] + "," + data[i + 1] + "," + data[i + 2] + "," + data[i + 3] + ")"
           });
         }
@@ -123,9 +138,13 @@
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         p = _ref[_i];
         this.cx.fillStyle = p.color;
-        this.cx.fillRect(p.x, p.y, 1, 1);
+        this.cx.fillRect(p.x | 0, p.y | 0, 3, 3);
+        p.x += p.vx;
+        p.y += p.vy;
       }
-      return requestAnimationFrame(this.draw);
+      if ((+(new Date)) - this.startTime < 4000) {
+        return requestAnimationFrame(this.draw);
+      }
     };
 
     return ParticleVisualizer;

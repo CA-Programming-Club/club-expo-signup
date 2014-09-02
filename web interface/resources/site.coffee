@@ -7,7 +7,7 @@ form.addEventListener "submit", (e) ->
 	# TODO: add fade out of audio visualizer
 	document.body.classList.add "in-fireworks-show"
 	fireworksName = form.name.value
-	audioVisualizer.lightness = 8
+	audioVisualizer.lightness = 15
 	new ParticleVisualizer fireworksName
 
 main = ->
@@ -31,8 +31,8 @@ class AudioVisualizer
 
 	hue: 0
 	damping: .03
-	lightness: 20
-	_lightness: 20
+	lightness: 30
+	_lightness: 30
 	poll: =>
 		@analyser.getByteFrequencyData @arr
 		w = @canvas.width = innerWidth
@@ -50,30 +50,46 @@ class AudioVisualizer
 			@cx.fillRect i * w // @arr.length, h * (1 - x / 255), Math.ceil(w / @arr.length), h * x / 255
 
 class ParticleVisualizer
-	canvas: document.getElementById "audio-canvas"
+	canvas: document.getElementById "particle-canvas"
 
 	constructor: (@name) ->
 		@cx = @canvas.getContext "2d"
 
 		c = document.createElement "canvas"
 		cx = c.getContext "2d"
-		cx.textBaseline = "middle"
+		cx.textBaseline = "alphabetic"
 		cx.font = "200 72px Helvetica Neue, sans-serif"
 		w = cx.measureText(name).width
 		c.height = 72 * 1.5
 		c.width = w
-		cx.fillText name, 0, c.height / 2
+		cx.font = "200 72px Helvetica Neue, sans-serif"
+		cx.fillStyle = "#fff"
+		cx.fillText name, 0, 75 * 1.05
 		imageData = cx.getImageData 0, 0, c.width, c.height
 		data = imageData.data
 
+		# left/right : subtract or add 4
+		# above/below: subtract or add 4 * the canvas width (c.width)
+		@startTime = +new Date
 		@particles = []
+		skip = 0
 		for x in [0...c.width]
 			for y in [0...c.height]
+				skip = skip + 1
+				if skip % 3 != 0
+					continue
 				i = (x + y * c.width) * 4
 				continue unless data[i+3]
+				xLoc = (innerWidth - c.width) / 2 + 2 + x
+				yLoc = (innerHeight - c.height) / 2 + 2 + y
+				rx = xLoc - innerWidth / 2
+				ry = yLoc - innerHeight / 2
+				magnitude = Math.sqrt rx * rx + ry * ry
 				@particles.push {
-					x: i % c.width
-					y: i // c.width
+					x: xLoc
+					y: yLoc
+					vx: .5 * (-20 + (50 / Math.abs(rx))) * (rx / magnitude)
+					vy: .75 * (-20 + (50 / Math.abs(ry))) * (ry / magnitude)
 					color: "rgba(#{data[i]},#{data[i+1]},#{data[i+2]},#{data[i+3]})"
 				}
 
@@ -84,7 +100,11 @@ class ParticleVisualizer
 		h = @canvas.height = innerHeight
 		for p in @particles
 			@cx.fillStyle = p.color
-			@cx.fillRect p.x, p.y, 1, 1
-		requestAnimationFrame @draw
+			@cx.fillRect p.x | 0, p.y | 0, 3, 3
+
+			p.x += p.vx
+			p.y += p.vy
+		if (+new Date) - @startTime < 4000	
+			requestAnimationFrame @draw
 
 main()
