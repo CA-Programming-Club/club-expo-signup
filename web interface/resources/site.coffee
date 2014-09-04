@@ -1,3 +1,48 @@
+fireworks = {
+	default: {
+		fadeLength: 3
+		fireworkSpeed: 2
+		fireworkAcceleration: 4
+		showShockwave: true
+		showTarget: false
+		particleCount: 30
+		particleSpeed: 5
+		particleSpeedVariance: 10
+		particleWind: 50
+		particleFriction: 5
+		particleGravity: 1
+		flickerDensity: 20
+		hueMin: 0
+		hueMax: 360
+		hueVariance: 30
+		lineWidth: 1
+		clearAlpha: 25
+	}
+	debug: { # show the target to allow for easier debugging
+		fadeLength: 3
+		fireworkSpeed: 2
+		fireworkAcceleration: 4
+		showShockwave: true
+		showTarget: true
+		particleSpeed: 5
+		particleSpeedVariance: 10
+		particleWind: 50
+		particleFriction: 5
+		particleGravity: 1
+		flickerDensity: 20
+		hueMin: 0
+		hueMax: 360
+		hueVariance: 30
+		lineWidth: 1
+		clearAlpha: 25
+	}
+}
+
+getDt: (lastTime) ->
+	now = +new Date
+	dt = (now - lastTime) / 16
+	if dt > 5 then 5 else dt
+
 fireworksName = null
 audioVisualizer = null
 form = document.querySelector "form"
@@ -146,7 +191,94 @@ class SeededRand
 			return random(limit)
 		return (@state1 + @state2) % limit
 main()
-rand = new SeededRand
-console.log rand.nextFloat()
-console.log rand.nextRange 50, 55
-console.log rand.nextInt 10
+
+# Fireworks based off of (but still different from) Jack Rugile's Canvas Fireworks Demo
+
+class Firework
+	canvas: document.getElementById "firework-canvas"
+	constructor: (@rand, config) ->
+		@config = Object.create config # Remove direct references
+		@cx = @canvas.getContext "2d"
+		@minX = 0
+		@maxX = innerWidth
+		@minDestinationY = innerHeight / 2
+		@maxDestinationY = innerHeight
+		@startX = @rand.randRange @minX, @maxX
+		@startY = 0
+		@x = @startX
+		@y = @startY
+		@hitX = false
+		@hitY = false
+		@fadeLength = @config.fadeLength
+		@history = []
+		@history.push { x: @starX, y: @startY } for [0...@fadeLength]
+		@targetX = @rand.randRange @startX - innerWidth / 10, @startX + innerWidth / 10
+		@targetY = @rand.randRange @minDestinationY, @maxDestinationY
+		@speed = @config.fireworkSpeed
+		@angle = Math.atan2 @targetY - @startY, @targetX - @startX
+		@shockwaveAngle = @angle + Math.PI / 2
+		@acceleration = @config.fireworkAcceleration / 100
+		@hue = @rand.nextInt @config.hueMin, @config.hueMax
+		@brightness = @rand.nextInt 0, 50
+		@alpha = rand.nextInt(50, 100) / 100
+		@lineWidth = @config.lineWidth
+		@targetRadius = 1
+		@showTarget = @cofig.showTarget
+		@lastTime = +new Date
+		requestAnimationFrame @update
+
+	update: () ->
+		dt = getDt @lastTime
+		@lastTime = +new Date
+		@cx.lineWidth = @lineWidth
+		vx = Math.cos(@angle) * @speed
+		vy = Math.sin(@angle) * @speed
+		@speed *= 1 + @acceleration
+		for i in [(@fadeLength - 1)...0]
+			@history[i] = @history[i - 1]
+		@history[0] = { x: @x, y: @y }
+
+		if @showTarget
+			if @targetRadius < 8
+				@targetRadius += .25 * dt
+			else
+				@targetRadius = dt 
+
+		if @startX >= @targetX
+			if @x + vx <= @targetX
+				@x = @targetX
+				@hitX = true
+			else
+				@x += vx * dt
+		else
+			if @x + vx >= @targetX
+				@x = @targetX
+				@hitX = true
+			else
+				@x += vx * dt
+
+		if @startY >= @targetY
+			if @x + vy <= @targetY
+				@y = @targetY
+				@hitY = true
+			else
+				@y += vy * dt
+		else
+			if @y + vy >= @targetY
+				@y = @targetY
+				@hitY = true
+			else
+				@y += vy * dt
+
+		if @hitX and @hitY
+			@createParticles()
+		else
+			requestAnimationFrame @update
+	createParticles: () ->
+		# TODO: Implement
+
+
+
+
+
+
