@@ -117,5 +117,36 @@ class ParticleVisualizer
 			p.y += p.vy
 		if (+new Date) - @startTime < 4000	
 			requestAnimationFrame @draw
+		# Hackey way of getting rid of the stupid top-left-of-screen particle bug
+		@cx.clearRect 0, 0, @size, @size
 
+class SeededRand
+	constructor: (@state1, @state2) ->
+		@mod1 = 4294967087
+		@mul1 = 65539
+		@mod2 = 4294965887
+		@mul2 = 65537
+		if typeof @state1 != "number"
+			@state1 = Math.floor(Math.random() * 2147483647)
+		if typeof @state2 != "number"
+			@state2 = @state1
+		@state1 = @state1 % (@mod1 - 1) + 1
+		@state2 = @state2 % (@mod2 - 1) + 1
+	# random float in range 0 to 1
+	nextFloat: () ->
+		return (@randTo 4294965886) / 4294965885
+	# random int in range min to max
+	randRange: (min, max) ->
+		return (@randTo (max - min + 1)) + min
+	# random int in range 0 (inclusive) to limit (exclusive)
+	nextInt: (limit) ->
+		@state1 = (@state1 * @mul1) % @mod1
+		@state2 = (@state2 * @mul2) % @mod2
+		if @state1 < limit and @state2 < limit and @state1 < @mod1 % limit and @state2 < @mod2 % limit
+			return random(limit)
+		return (@state1 + @state2) % limit
 main()
+rand = new SeededRand
+console.log rand.nextFloat()
+console.log rand.nextRange 50, 55
+console.log rand.nextInt 10
