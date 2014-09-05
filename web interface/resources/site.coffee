@@ -58,7 +58,7 @@ updateFireworks = ->
 main = ->
 	audioVisualizer = new AudioVisualizer
 	random = new SeededRand 1000, 832
-	console.log (new Firework random, fireworks.debug)
+	console.log new Firework random, fireworks.debug
 	requestAnimationFrame updateFireworks
 
 @AudioContext ?= @webkitAudioContext
@@ -227,7 +227,7 @@ class Firework
 		@draw()
 		fireworkEntities.push this
 
-	update: () =>
+	update: =>
 		dt = getDt @lastTime
 		@lastTime = Date.now()
 		vx = Math.cos(@angle) * @speed
@@ -274,7 +274,8 @@ class Firework
 			return false
 		else
 			@draw()
-	draw: () ->
+
+	draw: ->
 		@cx.lineWidth = @lineWidth
 		randCoord = @rand.nextInt @trailLength
 		@cx.beginPath()
@@ -313,7 +314,7 @@ class Star
 		@history = []
 		@history.push { x: @x, y: @y } for [0...@config.starTrailLength]
 		@angle = @rand.nextRange 0, 360
-		minSpeed = 
+		minSpeed =
 			if @config.starSpeed - @config.starSpeedVariance <= 0 then 1
 			else @config.starSpeed - @config.starSpeedVariance
 		maxSpeed = @config.starSpeed + @config.starSpeedVariance
