@@ -1,5 +1,5 @@
-fireworks = {
-	default: {
+fireworks =
+	default:
 		fadeLength: 3
 		fireworkSpeed: 2
 		fireworkAcceleration: 4
@@ -17,8 +17,8 @@ fireworks = {
 		hueVariance: 30
 		lineWidth: 1
 		clearAlpha: 25
-	}
-	debug: { # show the target to allow for easier debugging
+
+	debug: # show the target to allow for easier debugging
 		fadeLength: 3
 		fireworkSpeed: 2
 		fireworkAcceleration: 4
@@ -35,8 +35,6 @@ fireworks = {
 		hueVariance: 30
 		lineWidth: 1
 		clearAlpha: 25
-	}
-}
 
 getDt: (lastTime) ->
 	now = +new Date
