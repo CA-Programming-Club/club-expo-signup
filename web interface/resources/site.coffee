@@ -1,25 +1,27 @@
-fireworks =
-	default:
-		fadeLength: 3
-		fireworkSpeed: 2
-		fireworkAcceleration: 4
-		showShockwave: true
-		showTarget: false
-		particleCount: 30
-		particleSpeed: 5
-		particleSpeedVariance: 10
-		particleWind: 50
-		particleFriction: 5
-		particleGravity: 1
-		flickerDensity: 20
-		hueMin: 0
-		hueMax: 360
-		hueVariance: 30
-		lineWidth: 1
-		clearAlpha: 25
+extend = (o, p) -> o[k] = v for k, v of p; o
 
-fireworks.debug = Object.create fireworks.default
-fireworks.debug.showTarget = true
+fireworks = {}
+fireworks.default =
+	fadeLength: 3
+	fireworkSpeed: 2
+	fireworkAcceleration: 4
+	showShockwave: true
+	showTarget: false
+	particleCount: 30
+	particleSpeed: 5
+	particleSpeedVariance: 10
+	particleWind: 50
+	particleFriction: 5
+	particleGravity: 1
+	flickerDensity: 20
+	hueMin: 0
+	hueMax: 360
+	hueVariance: 30
+	lineWidth: 1
+	clearAlpha: 25
+
+extend fireworks.debug = Object.create(fireworks.default),
+	showTarget: true
 
 getDt: (lastTime) ->
 	now = Date.now()
