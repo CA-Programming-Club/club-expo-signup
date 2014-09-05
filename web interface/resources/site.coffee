@@ -124,7 +124,7 @@ class ParticleVisualizer
 		for x in [0...c.width]
 			for y in [0...c.height]
 				skip = skip + 1
-				if skip % @size != 0
+				if skip % @size
 					continue
 				i = (x + y * c.width) * 4
 				continue unless data[i+3]
@@ -141,7 +141,7 @@ class ParticleVisualizer
 					y: yLoc
 					vx: (tvx + 7 * tvx / vMagnitude) * innerWidth / 750
 					vy: (tvy + 7 * tvy / vMagnitude) * innerHeight / 650
-					color: "rgba(#{data[i]},#{data[i+1]},#{data[i+2]},#{data[i+3]})"
+					color: "rgb(#{data[i]},#{data[i+1]},#{data[i+2]})"
 				}
 		
 		setTimeout () =>

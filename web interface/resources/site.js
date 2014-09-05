@@ -162,7 +162,7 @@
       for (x = _i = 0, _ref = c.width; 0 <= _ref ? _i < _ref : _i > _ref; x = 0 <= _ref ? ++_i : --_i) {
         for (y = _j = 0, _ref1 = c.height; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; y = 0 <= _ref1 ? ++_j : --_j) {
           skip = skip + 1;
-          if (skip % this.size !== 0) {
+          if (skip % this.size) {
             continue;
           }
           i = (x + y * c.width) * 4;
@@ -182,7 +182,7 @@
             y: yLoc,
             vx: (tvx + 7 * tvx / vMagnitude) * innerWidth / 750,
             vy: (tvy + 7 * tvy / vMagnitude) * innerHeight / 650,
-            color: "rgba(" + data[i] + "," + data[i + 1] + "," + data[i + 2] + "," + data[i + 3] + ")"
+            color: "rgb(" + data[i] + "," + data[i + 1] + "," + data[i + 2] + ")"
           });
         }
       }
