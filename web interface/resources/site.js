@@ -22,26 +22,12 @@
       hueVariance: 30,
       lineWidth: 1,
       clearAlpha: 25
-    },
-    debug: {
-      fadeLength: 3,
-      fireworkSpeed: 2,
-      fireworkAcceleration: 4,
-      showShockwave: true,
-      showTarget: true,
-      particleSpeed: 5,
-      particleSpeedVariance: 10,
-      particleWind: 50,
-      particleFriction: 5,
-      particleGravity: 1,
-      flickerDensity: 20,
-      hueMin: 0,
-      hueMax: 360,
-      hueVariance: 30,
-      lineWidth: 1,
-      clearAlpha: 25
     }
   };
+
+  fireworks.debug = Object.create(fireworks["default"]);
+
+  fireworks.debug.showTarget = true;
 
   ({
     getDt: function(lastTime) {
