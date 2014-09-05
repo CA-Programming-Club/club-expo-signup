@@ -104,6 +104,7 @@ class ParticleVisualizer
 		@startTime = Date.now()
 		@particles = []
 		skip = 0
+		dw = Math.max 0, (c.width - c.height * .5) / 2
 		for px in [0...c.width]
 			for py in [0...c.height]
 				skip = skip + 1
@@ -111,13 +112,13 @@ class ParticleVisualizer
 					continue
 				i = (px + py * c.width) * 4
 				continue unless data[i+3]
-				x = (innerWidth - c.width) / 2 + 2 + px
-				y = (innerHeight - c.height) / 2 + 2 + py
-				rx = px - c.width / 2
+				x = (innerWidth - c.width) / 2 + px
+				y = (innerHeight - c.height) / 2 + py
+				rx = (if px < c.width / 2 then -1 else 1) * Math.max 0, Math.abs(px - c.width / 2) - dw
 				ry = py - c.height / 2
 				s = .5 + Math.random() * 3
-				vx = rx / 10 * s
-				vy = ry / 10 * s
+				vx = rx / 6 * s + Math.random() * 2 - 1
+				vy = ry / 6 * s + Math.random() * 2 - 1
 				life = 1.4 - s / 5
 				@particles.push {x, y, vx, vy, life}
 

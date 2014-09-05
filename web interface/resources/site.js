@@ -136,7 +136,7 @@
     ParticleVisualizer.prototype.size = 6;
 
     function ParticleVisualizer(name) {
-      var c, cx, data, i, imageData, life, px, py, rx, ry, s, skip, vx, vy, w, x, y, _i, _j, _ref, _ref1;
+      var c, cx, data, dw, i, imageData, life, px, py, rx, ry, s, skip, vx, vy, w, x, y, _i, _j, _ref, _ref1;
       this.name = name;
       this.draw = __bind(this.draw, this);
       this.cx = this.canvas.getContext("2d");
@@ -155,6 +155,7 @@
       this.startTime = Date.now();
       this.particles = [];
       skip = 0;
+      dw = Math.max(0, (c.width - c.height * .5) / 2);
       for (px = _i = 0, _ref = c.width; 0 <= _ref ? _i < _ref : _i > _ref; px = 0 <= _ref ? ++_i : --_i) {
         for (py = _j = 0, _ref1 = c.height; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; py = 0 <= _ref1 ? ++_j : --_j) {
           skip = skip + 1;
@@ -165,13 +166,13 @@
           if (!data[i + 3]) {
             continue;
           }
-          x = (innerWidth - c.width) / 2 + 2 + px;
-          y = (innerHeight - c.height) / 2 + 2 + py;
-          rx = px - c.width / 2;
+          x = (innerWidth - c.width) / 2 + px;
+          y = (innerHeight - c.height) / 2 + py;
+          rx = (px < c.width / 2 ? -1 : 1) * Math.max(0, Math.abs(px - c.width / 2) - dw);
           ry = py - c.height / 2;
           s = .5 + Math.random() * 3;
-          vx = rx / 10 * s;
-          vy = ry / 10 * s;
+          vx = rx / 6 * s + Math.random() * 2 - 1;
+          vy = ry / 6 * s + Math.random() * 2 - 1;
           life = 1.4 - s / 5;
           this.particles.push({
             x: x,
