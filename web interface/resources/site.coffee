@@ -161,7 +161,7 @@ class SeededRand
 	nextFloat: () ->
 		return (@randTo 4294965886) / 4294965885
 	# random int in range min to max
-	randRange: (min, max) ->
+	nextRange: (min, max) ->
 		return (@randTo (max - min + 1)) + min
 	# random int in range 0 (inclusive) to limit (exclusive)
 	nextInt: (limit) ->
@@ -183,38 +183,38 @@ class Firework
 		@maxX = innerWidth
 		@minDestinationY = innerHeight / 2
 		@maxDestinationY = innerHeight
-		@startX = @rand.randRange @minX, @maxX
+		@startX = @rand.nextRange @minX, @maxX
 		@startY = 0
 		@x = @startX
 		@y = @startY
 		@hitX = false
 		@hitY = false
-		@fadeLength = @config.fadeLength
+		@trailLength = @config.trailLength
 		@history = []
-		@history.push { x: @starX, y: @startY } for [0...@fadeLength]
-		@targetX = @rand.randRange @startX - innerWidth / 10, @startX + innerWidth / 10
-		@targetY = @rand.randRange @minDestinationY, @maxDestinationY
+		@history.push { x: @starX, y: @startY } for [0...@trailLength]
+		@targetX = @rand.nextRange @startX - innerWidth / 10, @startX + innerWidth / 10
+		@targetY = @rand.nextRange @minDestinationY, @maxDestinationY
 		@speed = @config.fireworkSpeed
 		@angle = Math.atan2 @targetY - @startY, @targetX - @startX
 		@shockwaveAngle = @angle + Math.PI / 2
 		@acceleration = @config.fireworkAcceleration / 100
 		@hue = @rand.nextInt @config.hueMin, @config.hueMax
-		@brightness = @rand.nextInt 0, 50
+		@brightness = @rand.nextInt 50, 80
 		@alpha = rand.nextInt(50, 100) / 100
 		@lineWidth = @config.lineWidth
 		@targetRadius = 1
 		@showTarget = @cofig.showTarget
 		@lastTime = Date.now()
+		@draw()
 		requestAnimationFrame @update
 
 	update: () ->
 		dt = getDt @lastTime
 		@lastTime = Date.now()
-		@cx.lineWidth = @lineWidth
 		vx = Math.cos(@angle) * @speed
 		vy = Math.sin(@angle) * @speed
 		@speed *= 1 + @acceleration
-		for i in [(@fadeLength - 1)...0]
+		for i in [(@trailLength - 1)...0]
 			@history[i] = @history[i - 1]
 		@history[0] = { x: @x, y: @y }
 
@@ -253,9 +253,44 @@ class Firework
 		if @hitX and @hitY
 			@createParticles()
 		else
+			@draw()
 			requestAnimationFrame @update
-	createParticles: () ->
-		# TODO: Implement
+	draw: () ->
+		@cx.lineWidth = @lineWidth
+		randCoord = @rand.nextInt @trailLength
+		@cx.beginPath()
+		@cx.moveTo Math.round(@history[randCoord].x), Math.round(@history[randCoord].y)
+		@cx.lineTo Math.round(@x), Math.round(@y)
+		@cx.closePath()
+		@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}, #{@alpha})"
+		@cx.stroke()
+		if @showTarget
+			@cx.save()
+			@cx.beginPath()
+			@cx.arc Math.round(@targetX), Math.round(@targetY), @targetRadius, 0, Math.PI * 2, false
+			@cx.closePath()
+			@cx.lineWidth = 1
+			@cx.stroke()
+			@cx.restore()
+		if @showShockwave
+			@cx.save()
+			@cx.translate Math.round(@x), Math.round(@y)
+			@cx.rotate @shockwaveAngle
+			@cx.beginPath()
+			@cx.arc 0, 0, @speed / 5, 0, Math.PI, true
+			@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}, #{rand.nextRange(25, 65) / 100})"
+			@cx.lineWidth = @lineWidth
+			@cx.stroke()
+			@cx.restore()
+
+class Star
+	constructor: (@x, @y, @baseHue, @config) ->
+		@history = []
+		@history.push { x: @x, y: @y } for [0...@config.starTrailLength]
+		@angle = rand.nextRange 0, 360
+		@speed = 
+
+
 
 
 

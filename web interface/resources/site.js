@@ -293,7 +293,12 @@
       this.lineWidth = this.config.lineWidth;
       this.targetRadius = 1;
       this.showTarget = this.cofig.showTarget;
+<<<<<<< Updated upstream
       this.lastTime = Date.now();
+=======
+      this.lastTime = +(new Date);
+      this.draw();
+>>>>>>> Stashed changes
       requestAnimationFrame(this.update);
     }
 
@@ -356,7 +361,7 @@
       }
     };
 
-    Firework.prototype.createParticles = function() {};
+    Firework.prototype.draw = function() {};
 
     return Firework;
 
