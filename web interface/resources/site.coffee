@@ -158,7 +158,7 @@ class SeededRand
 		@state1 = @state1 % (@mod1 - 1) + 1
 		@state2 = @state2 % (@mod2 - 1) + 1
 	# random float in range 0 to 1
-	nextFloat: () ->
+	nextFloat: ->
 		return (@randTo 4294965886) / 4294965885
 	# random int in range min to max
 	randRange: (min, max) ->
