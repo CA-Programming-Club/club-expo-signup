@@ -210,7 +210,7 @@ class Firework
 		@hitY = false
 		@trailLength = @config.trailLength
 		@history = []
-		@history.push { x: @startX, y: @startY } for [0...@trailLength]
+		@history.push {x: @startX, y: @startY} for [0...@trailLength]
 		@targetX = @rand.nextRange @startX - innerWidth / 10, @startX + innerWidth / 10
 		@targetY = @rand.nextRange @minDestinationY, @maxDestinationY
 		@speed = @config.fireworkSpeed
@@ -235,7 +235,7 @@ class Firework
 		@speed *= 1 + @acceleration
 		for i in [(@trailLength - 1)...0]
 			@history[i] = @history[i - 1]
-		@history[0] = { x: @x, y: @y }
+		@history[0] = {@x, @y}
 
 		if @showTarget
 			if @targetRadius < 8
