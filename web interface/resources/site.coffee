@@ -37,7 +37,7 @@ fireworks =
 		clearAlpha: 25
 
 getDt: (lastTime) ->
-	now = +new Date
+	now = Date.now()
 	dt = (now - lastTime) / 16
 	if dt > 5 then 5 else dt
 
@@ -115,7 +115,7 @@ class ParticleVisualizer
 
 		# left/right : subtract or add 4
 		# above/below: subtract or add 4 * the canvas width (c.width)
-		@startTime = +new Date
+		@startTime = Date.now()
 		@particles = []
 		@size = 5
 		skip = 0
@@ -158,7 +158,7 @@ class ParticleVisualizer
 			p.vy *= 0.99
 			p.x += p.vx
 			p.y += p.vy
-		if (+new Date) - @startTime < 4000
+		if Date.now() - @startTime < 4000
 			requestAnimationFrame @draw
 		# Hackey way of getting rid of the stupid top-left-of-screen particle bug
 		@cx.clearRect 0, 0, @size, @size
@@ -222,12 +222,12 @@ class Firework
 		@lineWidth = @config.lineWidth
 		@targetRadius = 1
 		@showTarget = @cofig.showTarget
-		@lastTime = +new Date
+		@lastTime = Date.now()
 		requestAnimationFrame @update
 
 	update: () ->
 		dt = getDt @lastTime
-		@lastTime = +new Date
+		@lastTime = Date.now()
 		@cx.lineWidth = @lineWidth
 		vx = Math.cos(@angle) * @speed
 		vy = Math.sin(@angle) * @speed

@@ -46,7 +46,7 @@
   ({
     getDt: function(lastTime) {
       var dt, now;
-      now = +(new Date);
+      now = Date.now();
       dt = (now - lastTime) / 16;
       if (dt > 5) {
         return 5;
@@ -155,7 +155,7 @@
       cx.fillText(name, 0, 75 * 1.05);
       imageData = cx.getImageData(0, 0, c.width, c.height);
       data = imageData.data;
-      this.startTime = +(new Date);
+      this.startTime = Date.now();
       this.particles = [];
       this.size = 5;
       skip = 0;
@@ -208,7 +208,7 @@
         p.x += p.vx;
         p.y += p.vy;
       }
-      if ((+(new Date)) - this.startTime < 4000) {
+      if (Date.now() - this.startTime < 4000) {
         requestAnimationFrame(this.draw);
       }
       return this.cx.clearRect(0, 0, this.size, this.size);
@@ -297,14 +297,14 @@
       this.lineWidth = this.config.lineWidth;
       this.targetRadius = 1;
       this.showTarget = this.cofig.showTarget;
-      this.lastTime = +(new Date);
+      this.lastTime = Date.now();
       requestAnimationFrame(this.update);
     }
 
     Firework.prototype.update = function() {
       var dt, i, vx, vy, _i, _ref;
       dt = getDt(this.lastTime);
-      this.lastTime = +(new Date);
+      this.lastTime = Date.now();
       this.cx.lineWidth = this.lineWidth;
       vx = Math.cos(this.angle) * this.speed;
       vy = Math.sin(this.angle) * this.speed;
