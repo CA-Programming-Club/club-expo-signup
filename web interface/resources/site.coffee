@@ -52,7 +52,7 @@ form.addEventListener "submit", (e) ->
 	# TODO: add fade out of audio visualizer
 	document.body.classList.add "in-fireworks-show"
 	fireworksName = form.name.value
-	setTimeout () -> 
+	setTimeout () ->
 		audioVisualizer.lightness = 15
 	, 3000
 	new ParticleVisualizer fireworksName
@@ -143,7 +143,7 @@ class ParticleVisualizer
 					vy: (tvy + 7 * tvy / vMagnitude) * innerHeight / 650
 					color: "rgb(#{data[i]},#{data[i+1]},#{data[i+2]})"
 				}
-		
+
 		setTimeout () =>
 			@cx.clearRect 0, 0, innerWidth, innerHeight, false
 		, 4010
@@ -160,7 +160,7 @@ class ParticleVisualizer
 			p.vy *= 0.99
 			p.x += p.vx
 			p.y += p.vy
-		if (+new Date) - @startTime < 4000	
+		if (+new Date) - @startTime < 4000
 			requestAnimationFrame @draw
 		# Hackey way of getting rid of the stupid top-left-of-screen particle bug
 		@cx.clearRect 0, 0, @size, @size
@@ -242,7 +242,7 @@ class Firework
 			if @targetRadius < 8
 				@targetRadius += .25 * dt
 			else
-				@targetRadius = dt 
+				@targetRadius = dt
 
 		if @startX >= @targetX
 			if @x + vx <= @targetX
