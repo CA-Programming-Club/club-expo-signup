@@ -187,11 +187,6 @@
           });
         }
       }
-      setTimeout((function(_this) {
-        return function() {
-          return _this.cx.clearRect(0, 0, innerWidth, innerHeight, false);
-        };
-      })(this), 4010);
       requestAnimationFrame(this.draw);
     }
 

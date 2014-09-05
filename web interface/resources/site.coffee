@@ -136,10 +136,6 @@ class ParticleVisualizer
 				life = 1.4 - s / 5
 				@particles.push {x, y, vx, vy, life}
 
-		setTimeout () =>
-			@cx.clearRect 0, 0, innerWidth, innerHeight, false
-		, 4010
-
 		requestAnimationFrame @draw
 
 	draw: =>
