@@ -278,10 +278,10 @@ class Firework
 	draw: ->
 		@cx.lineWidth = @lineWidth
 		randCoord = @rand.nextInt @trailLength
+		{x: ox, y: oy} = @history[randCoord]
 		@cx.beginPath()
-		@cx.moveTo Math.round(@history[randCoord].x), Math.round(@history[randCoord].y)
+		@cx.moveTo Math.round(ox), Math.round(oy)
 		@cx.lineTo Math.round(@x), Math.round(@y)
-		@cx.closePath()
 		@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}%, #{@alpha})"
 		@cx.stroke()
 		if @showTarget
