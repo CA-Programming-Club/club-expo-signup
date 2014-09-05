@@ -101,8 +101,6 @@ class ParticleVisualizer
 		imageData = cx.getImageData 0, 0, c.width, c.height
 		data = imageData.data
 
-		# left/right : subtract or add 4
-		# above/below: subtract or add 4 * the canvas width (c.width)
 		@startTime = Date.now()
 		@particles = []
 		skip = 0
