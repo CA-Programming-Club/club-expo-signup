@@ -48,8 +48,8 @@ form.addEventListener "submit", (e) ->
 fireworksCanvas = document.getElementById "firework-canvas"
 fireworkEntities = []
 updateFireworks = ->
-	#fireworksCanvas.width = innerWidth
-	#fireworksCanvas.height = innerHeight
+	fireworksCanvas.width = innerWidth
+	fireworksCanvas.height = innerHeight
 	i = fireworkEntities.length
 	while i--
 		if false is fireworkEntities[i].update() then fireworkEntities.splice i, 1
@@ -369,18 +369,4 @@ class Star
 				@cx.fillStyle = "hsla(#{@hue}, 100%, #{@brightness}%, #{randAlpha})"
 				@cx.fill()
 
-
 main()
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -77,6 +77,8 @@
 
   updateFireworks = function() {
     var i;
+    fireworksCanvas.width = innerWidth;
+    fireworksCanvas.height = innerHeight;
     i = fireworkEntities.length;
     while (i--) {
       if (false === fireworkEntities[i].update()) {
@@ -296,7 +298,7 @@
       this.history = [];
       for (_i = 0, _ref = this.trailLength; 0 <= _ref ? _i < _ref : _i > _ref; 0 <= _ref ? _i++ : _i--) {
         this.history.push({
-          x: this.starX,
+          x: this.startX,
           y: this.startY
         });
       }
@@ -377,13 +379,13 @@
     };
 
     Firework.prototype.draw = function() {
-      var randCoord;
+      var ox, oy, randCoord, _ref;
       this.cx.lineWidth = this.lineWidth;
       randCoord = this.rand.nextInt(this.trailLength);
+      _ref = this.history[randCoord], ox = _ref.x, oy = _ref.y;
       this.cx.beginPath();
-      this.cx.moveTo(Math.round(this.history[randCoord].x), Math.round(this.history[randCoord].y));
+      this.cx.moveTo(Math.round(ox), Math.round(oy));
       this.cx.lineTo(Math.round(this.x), Math.round(this.y));
-      this.cx.closePath();
       this.cx.strokeStyle = "hsla(" + this.hue + ", 100%, " + this.brightness + "%, " + this.alpha + ")";
       this.cx.stroke();
       if (this.showTarget) {
