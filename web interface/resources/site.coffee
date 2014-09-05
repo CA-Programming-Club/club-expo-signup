@@ -96,6 +96,7 @@ class AudioVisualizer
 
 class ParticleVisualizer
 	canvas: document.getElementById "particle-canvas"
+	size: 6
 
 	constructor: (@name) ->
 		@cx = @canvas.getContext "2d"
@@ -117,30 +118,23 @@ class ParticleVisualizer
 		# above/below: subtract or add 4 * the canvas width (c.width)
 		@startTime = Date.now()
 		@particles = []
-		@size = 5
 		skip = 0
-		for x in [0...c.width]
-			for y in [0...c.height]
+		for px in [0...c.width]
+			for py in [0...c.height]
 				skip = skip + 1
 				if skip % @size
 					continue
-				i = (x + y * c.width) * 4
+				i = (px + py * c.width) * 4
 				continue unless data[i+3]
-				xLoc = (innerWidth - c.width) / 2 + 2 + x
-				yLoc = (innerHeight - c.height) / 2 + 2 + y
-				rx = xLoc - innerWidth / 2
-				ry = yLoc - innerHeight / 2
-				magnitude = Math.sqrt rx * rx + ry * ry
-				tvx = 1 * Math.random() * (-20 + (50 / Math.abs(rx))) * (rx / magnitude)
-				tvy = 1.5 * Math.random() * (-20 + (50 / Math.abs(ry))) * (ry / magnitude)
-				vMagnitude = Math.sqrt tvx * tvx + tvy * tvy
-				@particles.push {
-					x: xLoc
-					y: yLoc
-					vx: (tvx + 7 * tvx / vMagnitude) * innerWidth / 750
-					vy: (tvy + 7 * tvy / vMagnitude) * innerHeight / 650
-					color: "rgb(#{data[i]},#{data[i+1]},#{data[i+2]})"
-				}
+				x = (innerWidth - c.width) / 2 + 2 + px
+				y = (innerHeight - c.height) / 2 + 2 + py
+				rx = px - c.width / 2
+				ry = py - c.height / 2
+				s = .5 + Math.random() * 3
+				vx = rx / 10 * s
+				vy = ry / 10 * s
+				life = 1.4 - s / 5
+				@particles.push {x, y, vx, vy, life}
 
 		setTimeout () =>
 			@cx.clearRect 0, 0, innerWidth, innerHeight, false
@@ -151,17 +145,22 @@ class ParticleVisualizer
 	draw: =>
 		w = @canvas.width = innerWidth
 		h = @canvas.height = innerHeight
-		for p in @particles
-			@cx.fillStyle = p.color
-			@cx.fillRect p.x | 0, p.y | 0, @size, @size
-			p.vx *= 0.99
-			p.vy *= 0.99
+		t = (Date.now() - @startTime) / 1000
+		@cx.fillStyle = '#fff'
+		i = @particles.length
+		while i--
+			p = @particles[i]
+			if t > p.life
+				@particles.splice i, 1
+				continue
+			@cx.globalAlpha = 1 - (t / p.life)
+			@cx.fillRect p.x | 0, p.y | 0, @size-1, @size-1
+			p.vx *= 0.97
+			p.vy *= 0.97
 			p.x += p.vx
 			p.y += p.vy
-		if Date.now() - @startTime < 4000
+		if @particles.length
 			requestAnimationFrame @draw
-		# Hackey way of getting rid of the stupid top-left-of-screen particle bug
-		@cx.clearRect 0, 0, @size, @size
 
 class SeededRand
 	constructor: (@state1, @state2) ->

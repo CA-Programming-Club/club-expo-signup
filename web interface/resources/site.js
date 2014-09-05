@@ -138,8 +138,10 @@
   ParticleVisualizer = (function() {
     ParticleVisualizer.prototype.canvas = document.getElementById("particle-canvas");
 
+    ParticleVisualizer.prototype.size = 6;
+
     function ParticleVisualizer(name) {
-      var c, cx, data, i, imageData, magnitude, rx, ry, skip, tvx, tvy, vMagnitude, w, x, xLoc, y, yLoc, _i, _j, _ref, _ref1;
+      var c, cx, data, i, imageData, life, px, py, rx, ry, s, skip, vx, vy, w, x, y, _i, _j, _ref, _ref1;
       this.name = name;
       this.draw = __bind(this.draw, this);
       this.cx = this.canvas.getContext("2d");
@@ -157,32 +159,31 @@
       data = imageData.data;
       this.startTime = Date.now();
       this.particles = [];
-      this.size = 5;
       skip = 0;
-      for (x = _i = 0, _ref = c.width; 0 <= _ref ? _i < _ref : _i > _ref; x = 0 <= _ref ? ++_i : --_i) {
-        for (y = _j = 0, _ref1 = c.height; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; y = 0 <= _ref1 ? ++_j : --_j) {
+      for (px = _i = 0, _ref = c.width; 0 <= _ref ? _i < _ref : _i > _ref; px = 0 <= _ref ? ++_i : --_i) {
+        for (py = _j = 0, _ref1 = c.height; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; py = 0 <= _ref1 ? ++_j : --_j) {
           skip = skip + 1;
           if (skip % this.size) {
             continue;
           }
-          i = (x + y * c.width) * 4;
+          i = (px + py * c.width) * 4;
           if (!data[i + 3]) {
             continue;
           }
-          xLoc = (innerWidth - c.width) / 2 + 2 + x;
-          yLoc = (innerHeight - c.height) / 2 + 2 + y;
-          rx = xLoc - innerWidth / 2;
-          ry = yLoc - innerHeight / 2;
-          magnitude = Math.sqrt(rx * rx + ry * ry);
-          tvx = 1 * Math.random() * (-20 + (50 / Math.abs(rx))) * (rx / magnitude);
-          tvy = 1.5 * Math.random() * (-20 + (50 / Math.abs(ry))) * (ry / magnitude);
-          vMagnitude = Math.sqrt(tvx * tvx + tvy * tvy);
+          x = (innerWidth - c.width) / 2 + 2 + px;
+          y = (innerHeight - c.height) / 2 + 2 + py;
+          rx = px - c.width / 2;
+          ry = py - c.height / 2;
+          s = .5 + Math.random() * 3;
+          vx = rx / 10 * s;
+          vy = ry / 10 * s;
+          life = 1.4 - s / 5;
           this.particles.push({
-            x: xLoc,
-            y: yLoc,
-            vx: (tvx + 7 * tvx / vMagnitude) * innerWidth / 750,
-            vy: (tvy + 7 * tvy / vMagnitude) * innerHeight / 650,
-            color: "rgb(" + data[i] + "," + data[i + 1] + "," + data[i + 2] + ")"
+            x: x,
+            y: y,
+            vx: vx,
+            vy: vy,
+            life: life
           });
         }
       }
@@ -195,23 +196,28 @@
     }
 
     ParticleVisualizer.prototype.draw = function() {
-      var h, p, w, _i, _len, _ref;
+      var h, i, p, t, w;
       w = this.canvas.width = innerWidth;
       h = this.canvas.height = innerHeight;
-      _ref = this.particles;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        p = _ref[_i];
-        this.cx.fillStyle = p.color;
-        this.cx.fillRect(p.x | 0, p.y | 0, this.size, this.size);
-        p.vx *= 0.99;
-        p.vy *= 0.99;
+      t = (Date.now() - this.startTime) / 1000;
+      this.cx.fillStyle = '#fff';
+      i = this.particles.length;
+      while (i--) {
+        p = this.particles[i];
+        if (t > p.life) {
+          this.particles.splice(i, 1);
+          continue;
+        }
+        this.cx.globalAlpha = 1 - (t / p.life);
+        this.cx.fillRect(p.x | 0, p.y | 0, this.size - 1, this.size - 1);
+        p.vx *= 0.97;
+        p.vy *= 0.97;
         p.x += p.vx;
         p.y += p.vy;
       }
-      if (Date.now() - this.startTime < 4000) {
-        requestAnimationFrame(this.draw);
+      if (this.particles.length) {
+        return requestAnimationFrame(this.draw);
       }
-      return this.cx.clearRect(0, 0, this.size, this.size);
     };
 
     return ParticleVisualizer;
