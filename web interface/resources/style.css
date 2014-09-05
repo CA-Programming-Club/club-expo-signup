@@ -7,6 +7,7 @@ canvas {
 }
 html {
 	height: 100%;
+	-webkit-user-select: none;
 }
 body {
 	overflow: hidden;
