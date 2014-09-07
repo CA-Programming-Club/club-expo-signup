@@ -1,17 +1,17 @@
 extend = (o, p) -> o[k] = v for k, v of p; o
-
+clearAlpha = 25
 fireworks = {}
 fireworks.default =
 	fadeLength: 3
 	fireworkSpeed: 2
 	fireworkAcceleration: 4
-	trailLength: 3
+	trailLength: 2
 	showShockwave: true
 	showTarget: false
 	starCount: 30
 	starSpeed: 5
 	starSpeedVariance: 10
-	starWind: 50
+	starWind: 0
 	starFriction: 5
 	starGravity: 1
 	starTrailLength: 3
@@ -46,10 +46,14 @@ form.addEventListener "submit", (e) ->
 	new ParticleVisualizer fireworksName
 
 fireworksCanvas = document.getElementById "firework-canvas"
+fireworksContext = fireworksCanvas.getContext "2d"
 fireworkEntities = []
 updateFireworks = ->
-	fireworksCanvas.width = innerWidth
-	fireworksCanvas.height = innerHeight
+	fireworksContext.globalCompositeOperation = "destination-out"
+	fireworksContext.fillStyle = "rgba(0, 0, 0, #{clearAlpha / 100})"
+	fireworksContext.fillRect 0, 0, fireworksCanvas.width, fireworksCanvas.height
+	fireworksContext.globalCompositeOperation = "lighter"
+
 	i = fireworkEntities.length
 	while i--
 		if false is fireworkEntities[i].update() then fireworkEntities.splice i, 1
@@ -57,8 +61,10 @@ updateFireworks = ->
 
 main = ->
 	audioVisualizer = new AudioVisualizer
-	random = new SeededRand 1000, 832
-	console.log new Firework random, fireworks.debug
+	random = new SeededRand
+	console.log new Firework random, fireworks.default
+	fireworksCanvas.width = innerWidth
+	fireworksCanvas.height = innerHeight
 	requestAnimationFrame updateFireworks
 
 @AudioContext ?= @webkitAudioContext
@@ -198,12 +204,12 @@ class Firework
 	constructor: (@rand, config) ->
 		@config = Object.create config # Remove direct references
 		@cx = @canvas.getContext "2d"
-		@minX = 0
-		@maxX = innerWidth
-		@minDestinationY = innerHeight / 2
-		@maxDestinationY = innerHeight
+		@minX = innerWidth / 3
+		@maxX = 2 * innerWidth / 3
+		@minDestinationY = innerHeight / 5
+		@maxDestinationY = innerHeight / 2
 		@startX = @rand.nextRange @minX, @maxX
-		@startY = 0
+		@startY = innerHeight
 		@x = @startX
 		@y = @startY
 		@hitX = false
@@ -211,17 +217,17 @@ class Firework
 		@trailLength = @config.trailLength
 		@history = []
 		@history.push {x: @startX, y: @startY} for [0...@trailLength]
-		@targetX = @rand.nextRange @startX - innerWidth / 10, @startX + innerWidth / 10
+		@targetX = @rand.nextRange @startX - innerWidth / 3, @startX + innerWidth / 3
 		@targetY = @rand.nextRange @minDestinationY, @maxDestinationY
 		@speed = @config.fireworkSpeed
 		@angle = Math.atan2 @targetY - @startY, @targetX - @startX
 		@shockwaveAngle = @angle + Math.PI / 2
 		@acceleration = @config.fireworkAcceleration / 100
 		@hue = @rand.nextRange @config.hueMin, @config.hueMax
-		@brightness = @rand.nextInt 50, 80
-		@alpha = rand.nextInt(50, 100) / 100
+		@brightness = @rand.nextRange 50, 80
+		@alpha = @rand.nextRange(50, 100) / 100
 		@lineWidth = @config.lineWidth
-		@targetRadius = 1
+		@targetRadius = 5
 		@showTarget = @config.showTarget
 		@lastTime = Date.now()
 		@draw()
@@ -257,7 +263,7 @@ class Firework
 				@x += vx * dt
 
 		if @startY >= @targetY
-			if @x + vy <= @targetY
+			if @y + vy <= @targetY
 				@y = @targetY
 				@hitY = true
 			else
@@ -292,13 +298,13 @@ class Firework
 			@cx.lineWidth = 1
 			@cx.stroke()
 			@cx.restore()
-		if @showShockwave
+		if @config.showShockwave
 			@cx.save()
 			@cx.translate Math.round(@x), Math.round(@y)
 			@cx.rotate @shockwaveAngle
 			@cx.beginPath()
 			@cx.arc 0, 0, @speed / 5, 0, Math.PI, true
-			@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}, #{rand.nextRange(25, 65) / 100})"
+			@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}, #{@rand.nextRange(25, 65) / 100})"
 			@cx.lineWidth = @lineWidth
 			@cx.stroke()
 			@cx.restore()
@@ -321,7 +327,7 @@ class Star
 		@speed = @rand.nextRange minSpeed, maxSpeed
 		@friction = 1 - @config.starFriction / 100
 		@gravity = @config.starGravity / 2
-		@hue = @rand.nextRange @hue - @config.hueVariance, @hue + @config.hueVariance
+		@hue = @rand.nextRange @baseHue - @config.hueVariance, @baseHue + @config.hueVariance
 		@brightness = @rand.nextRange 50, 80
 		@alpha = @rand.nextRange(40, 100) / 100
 		@decay = @rand.nextRange(10, 50) / 1000
@@ -360,6 +366,7 @@ class Star
 		if @config.flickerDensity > 0
 			inverseDensity = 50 - @config.flickerDensity
 			if @rand.nextRange(0, inverseDensity) is inverseDensity
+				console.log "will flicker"
 				@cx.beginPath()
 				@cx.arc Math.round(@x), Math.round(@y),
 					@rand.nextRange(@config.starWidth, @config.starWidth + 3) / 2,
