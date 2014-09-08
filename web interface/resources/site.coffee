@@ -31,19 +31,28 @@ getDt = (lastTime) ->
 	dt = (now - lastTime) / 16
 	if dt > 5 then 5 else dt
 
+hashCode = (str) ->
+	hash = 0
+	return hash if str.length == 0
+	for i in [0...str.length]
+		char = str.charCodeAt i
+		hash = ((hash << 5) - hash) + char;
+		hash = hash & hash
+	return hash
+
 fireworksName = null
 audioVisualizer = null
 form = document.querySelector "form"
 form.addEventListener "submit", (e) ->
 	return if fireworksName
 	e.preventDefault()
-	# TODO: add fade out of audio visualizer
 	document.body.classList.add "in-fireworks-show"
 	fireworksName = form.name.value
 	setTimeout () ->
-		audioVisualizer.lightness = 15
+		audioVisualizer.lightness = 8
 	, 3000
 	new ParticleVisualizer fireworksName
+	new Show fireworksName
 
 fireworksCanvas = document.getElementById "firework-canvas"
 fireworksContext = fireworksCanvas.getContext "2d"
@@ -62,7 +71,7 @@ updateFireworks = ->
 main = ->
 	audioVisualizer = new AudioVisualizer
 	random = new SeededRand
-	console.log new Firework random, fireworks.default
+	#console.log new Firework random, fireworks.default
 	fireworksCanvas.width = innerWidth
 	fireworksCanvas.height = innerHeight
 	requestAnimationFrame updateFireworks
@@ -193,11 +202,43 @@ class SeededRand
 		@state1 = (@state1 * @mul1) % @mod1
 		@state2 = (@state2 * @mul2) % @mod2
 		if @state1 < limit and @state2 < limit and @state1 < @mod1 % limit and @state2 < @mod2 % limit
-			return random(limit)
+			return @random(limit)
 		return (@state1 + @state2) % limit
 
 
 # Fireworks based off of (but still different from) Jack Rugile's Canvas Fireworks Demo
+
+
+class Show
+	startDelay: 3500
+	showLength: 30
+	fireworksSpawned: 0
+	minInterval: 50
+	maxInterval: 1000
+	constructor: (@name) ->
+		@hash = hashCode @name
+		@rand = new SeededRand Math.abs(@hash)
+		# Uses abs to avoid negative hashes messing up the RNG. It shouldn't matter though as
+		# we don't really care about the cryptographic integrity of the hash :P
+		fireworksCanvas.width = innerWidth
+		fireworksCanvas.height = innerHeight
+		setTimeout @spawnFirework, @startDelay
+	spawnFirework: () =>
+
+		@fireworksSpawned += 1
+		if @fireworksSpawned <= @showLength
+			setTimeout @spawnFirework, @rand.nextRange(@minInterval, @maxInterval)
+		else
+			setTimeout () ->
+				audioVisualizer.lightness = 30
+
+			, 3000
+			setTimeout () ->
+				form.name.value = ""
+				document.body.classList.remove "in-fireworks-show"
+			, 3500
+		new Firework @rand, fireworks.default
+
 
 class Firework
 	canvas: document.getElementById "firework-canvas"
@@ -209,7 +250,7 @@ class Firework
 		@minDestinationY = innerHeight / 5
 		@maxDestinationY = innerHeight / 2
 		@startX = @rand.nextRange @minX, @maxX
-		@startY = innerHeight
+		@startY = innerHeight + 30
 		@x = @startX
 		@y = @startY
 		@hitX = false
@@ -366,7 +407,6 @@ class Star
 		if @config.flickerDensity > 0
 			inverseDensity = 50 - @config.flickerDensity
 			if @rand.nextRange(0, inverseDensity) is inverseDensity
-				console.log "will flicker"
 				@cx.beginPath()
 				@cx.arc Math.round(@x), Math.round(@y),
 					@rand.nextRange(@config.starWidth, @config.starWidth + 3) / 2,
