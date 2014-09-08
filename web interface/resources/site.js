@@ -301,13 +301,13 @@
   Show = (function() {
     Show.prototype.startDelay = 3500;
 
-    Show.prototype.showLength = 30;
+    Show.prototype.showLength = 180;
 
     Show.prototype.fireworksSpawned = 0;
 
     Show.prototype.minInterval = 50;
 
-    Show.prototype.maxInterval = 1000;
+    Show.prototype.maxInterval = 300;
 
     function Show(name) {
       this.name = name;

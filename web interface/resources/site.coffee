@@ -210,10 +210,10 @@ class SeededRand
 
 class Show
 	startDelay: 3500
-	showLength: 30
+	showLength: 180
 	fireworksSpawned: 0
 	minInterval: 50
-	maxInterval: 1000
+	maxInterval: 300
 	constructor: (@name) ->
 		@hash = hashCode @name
 		@rand = new SeededRand Math.abs(@hash)
