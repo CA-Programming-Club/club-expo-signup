@@ -1,49 +1,81 @@
 extend = (o, p) -> o[k] = v for k, v of p; o
-
+clearAlpha = 25
 fireworks = {}
 fireworks.default =
 	fadeLength: 3
 	fireworkSpeed: 2
 	fireworkAcceleration: 4
+	trailLength: 2
 	showShockwave: true
 	showTarget: false
-	particleCount: 30
-	particleSpeed: 5
-	particleSpeedVariance: 10
-	particleWind: 50
-	particleFriction: 5
-	particleGravity: 1
+	starCount: 30
+	starSpeed: 5
+	starSpeedVariance: 10
+	starWind: 0
+	starFriction: 5
+	starGravity: 1
+	starTrailLength: 3
 	flickerDensity: 20
 	hueMin: 0
 	hueMax: 360
 	hueVariance: 30
 	lineWidth: 1
+	starWidth: 1
 	clearAlpha: 25
 
 extend fireworks.debug = Object.create(fireworks.default),
 	showTarget: true
 
-getDt: (lastTime) ->
+getDt = (lastTime) ->
 	now = Date.now()
 	dt = (now - lastTime) / 16
 	if dt > 5 then 5 else dt
+
+hashCode = (str) ->
+	hash = 0
+	return hash if str.length == 0
+	for i in [0...str.length]
+		char = str.charCodeAt i
+		hash = ((hash << 5) - hash) + char;
+		hash = hash & hash
+	return hash
 
 fireworksName = null
 audioVisualizer = null
 form = document.querySelector "form"
 form.addEventListener "submit", (e) ->
-	return if fireworksName
 	e.preventDefault()
-	# TODO: add fade out of audio visualizer
+	return if fireworksName
 	document.body.classList.add "in-fireworks-show"
 	fireworksName = form.name.value
 	setTimeout () ->
-		audioVisualizer.lightness = 15
+		audioVisualizer.lightness = 8
 	, 3000
+	# TODO: Send name to server
 	new ParticleVisualizer fireworksName
+	new Show fireworksName
+
+fireworksCanvas = document.getElementById "firework-canvas"
+fireworksContext = fireworksCanvas.getContext "2d"
+fireworkEntities = []
+updateFireworks = ->
+	fireworksContext.globalCompositeOperation = "destination-out"
+	fireworksContext.fillStyle = "rgba(0, 0, 0, #{clearAlpha / 100})"
+	fireworksContext.fillRect 0, 0, fireworksCanvas.width, fireworksCanvas.height
+	fireworksContext.globalCompositeOperation = "lighter"
+
+	i = fireworkEntities.length
+	while i--
+		if false is fireworkEntities[i].update() then fireworkEntities.splice i, 1
+	requestAnimationFrame updateFireworks
 
 main = ->
 	audioVisualizer = new AudioVisualizer
+	random = new SeededRand
+	#console.log new Firework random, fireworks.default
+	fireworksCanvas.width = innerWidth
+	fireworksCanvas.height = innerHeight
+	requestAnimationFrame updateFireworks
 
 @AudioContext ?= @webkitAudioContext
 
@@ -137,6 +169,9 @@ class ParticleVisualizer
 				continue
 			@cx.globalAlpha = 1 - (t / p.life)
 			@cx.fillRect p.x | 0, p.y | 0, @size-1, @size-1
+			# @cx.beginPath()
+			# @cx.arc p.x | 0, p.y | 0, @size / 2, Math.PI * 2, false
+			# @cx.fill()
 			p.vx *= 0.97
 			p.vy *= 0.97
 			p.x += p.vx
@@ -157,65 +192,98 @@ class SeededRand
 		@state1 = @state1 % (@mod1 - 1) + 1
 		@state2 = @state2 % (@mod2 - 1) + 1
 	# random float in range 0 to 1
-	nextFloat: ->
-		return (@randTo 4294965886) / 4294965885
+	nextFloat: () ->
+		return (@nextInt 4294965886) / 4294965885
 	# random int in range min to max
-	randRange: (min, max) ->
-		return (@randTo (max - min + 1)) + min
+	nextRange: (min, max) ->
+		return (@nextInt (max - min + 1)) + min
 	# random int in range 0 (inclusive) to limit (exclusive)
 	nextInt: (limit) ->
 		@state1 = (@state1 * @mul1) % @mod1
 		@state2 = (@state2 * @mul2) % @mod2
 		if @state1 < limit and @state2 < limit and @state1 < @mod1 % limit and @state2 < @mod2 % limit
-			return random(limit)
+			return @random(limit)
 		return (@state1 + @state2) % limit
-main()
+
 
 # Fireworks based off of (but still different from) Jack Rugile's Canvas Fireworks Demo
+
+
+class Show
+	startDelay: 3500
+	showLength: 100
+	fireworksSpawned: 0
+	minInterval: 50
+	maxInterval: 300
+	constructor: (@name) ->
+		@hash = hashCode @name
+		@rand = new SeededRand Math.abs(@hash)
+		# Uses abs to avoid negative hashes messing up the RNG. It shouldn't matter though as
+		# we don't really care about the cryptographic integrity of the hash :P
+		fireworksCanvas.width = innerWidth
+		fireworksCanvas.height = innerHeight
+		setTimeout @spawnFirework, @startDelay
+	spawnFirework: () =>
+
+		@fireworksSpawned += 1
+		if @fireworksSpawned <= @showLength
+			setTimeout @spawnFirework, @rand.nextRange(@minInterval, @maxInterval)
+		else
+			setTimeout () ->
+				audioVisualizer.lightness = 30
+
+			, 3000
+			setTimeout () ->
+				form.name.value = ""
+				fireworksName = null
+				document.body.classList.remove "in-fireworks-show"
+			, 3500
+		new Firework @rand, fireworks.default
+
 
 class Firework
 	canvas: document.getElementById "firework-canvas"
 	constructor: (@rand, config) ->
 		@config = Object.create config # Remove direct references
 		@cx = @canvas.getContext "2d"
-		@minX = 0
-		@maxX = innerWidth
-		@minDestinationY = innerHeight / 2
-		@maxDestinationY = innerHeight
-		@startX = @rand.randRange @minX, @maxX
-		@startY = 0
+		@minX = innerWidth / 3
+		@maxX = 2 * innerWidth / 3
+		@minDestinationY = innerHeight / 5
+		@maxDestinationY = innerHeight / 2
+		@startX = @rand.nextRange @minX, @maxX
+		@startY = innerHeight + 30
 		@x = @startX
 		@y = @startY
 		@hitX = false
 		@hitY = false
-		@fadeLength = @config.fadeLength
+		@trailLength = @config.trailLength
 		@history = []
-		@history.push { x: @starX, y: @startY } for [0...@fadeLength]
-		@targetX = @rand.randRange @startX - innerWidth / 10, @startX + innerWidth / 10
-		@targetY = @rand.randRange @minDestinationY, @maxDestinationY
+		@history.push {x: @startX, y: @startY} for [0...@trailLength]
+		@targetX = @rand.nextRange @startX - innerWidth / 3, @startX + innerWidth / 3
+		@targetY = @rand.nextRange @minDestinationY, @maxDestinationY
 		@speed = @config.fireworkSpeed
 		@angle = Math.atan2 @targetY - @startY, @targetX - @startX
 		@shockwaveAngle = @angle + Math.PI / 2
 		@acceleration = @config.fireworkAcceleration / 100
-		@hue = @rand.nextInt @config.hueMin, @config.hueMax
-		@brightness = @rand.nextInt 0, 50
-		@alpha = rand.nextInt(50, 100) / 100
+		@hue = @rand.nextRange @config.hueMin, @config.hueMax
+		@brightness = @rand.nextRange 50, 80
+		@alpha = @rand.nextRange(50, 100) / 100
 		@lineWidth = @config.lineWidth
-		@targetRadius = 1
-		@showTarget = @cofig.showTarget
+		@targetRadius = 5
+		@showTarget = @config.showTarget
 		@lastTime = Date.now()
-		requestAnimationFrame @update
+		@draw()
+		fireworkEntities.push this
 
-	update: () ->
+	update: =>
 		dt = getDt @lastTime
 		@lastTime = Date.now()
-		@cx.lineWidth = @lineWidth
 		vx = Math.cos(@angle) * @speed
 		vy = Math.sin(@angle) * @speed
 		@speed *= 1 + @acceleration
-		for i in [(@fadeLength - 1)...0]
+		for i in [(@trailLength - 1)...0]
 			@history[i] = @history[i - 1]
-		@history[0] = { x: @x, y: @y }
+		@history[0] = {@x, @y}
 
 		if @showTarget
 			if @targetRadius < 8
@@ -237,7 +305,7 @@ class Firework
 				@x += vx * dt
 
 		if @startY >= @targetY
-			if @x + vy <= @targetY
+			if @y + vy <= @targetY
 				@y = @targetY
 				@hitY = true
 			else
@@ -250,14 +318,103 @@ class Firework
 				@y += vy * dt
 
 		if @hitX and @hitY
-			@createParticles()
+			@createStars()
+			return false
 		else
+			@draw()
+
+	draw: ->
+		@cx.lineWidth = @lineWidth
+		randCoord = @rand.nextInt @trailLength
+		{x: ox, y: oy} = @history[randCoord]
+		@cx.beginPath()
+		@cx.moveTo Math.round(ox), Math.round(oy)
+		@cx.lineTo Math.round(@x), Math.round(@y)
+		@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}%, #{@alpha})"
+		@cx.stroke()
+		if @showTarget
+			@cx.save()
+			@cx.beginPath()
+			@cx.arc Math.round(@targetX), Math.round(@targetY), @targetRadius, 0, Math.PI * 2, false
+			@cx.closePath()
+			@cx.lineWidth = 1
+			@cx.stroke()
+			@cx.restore()
+		if @config.showShockwave
+			@cx.save()
+			@cx.translate Math.round(@x), Math.round(@y)
+			@cx.rotate @shockwaveAngle
+			@cx.beginPath()
+			@cx.arc 0, 0, @speed / 5, 0, Math.PI, true
+			@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}, #{@rand.nextRange(25, 65) / 100})"
+			@cx.lineWidth = @lineWidth
+			@cx.stroke()
+			@cx.restore()
+
+	createStars: () ->
+		(new Star @rand, @x, @y, @hue, @config) for [0...@config.starCount]
+
+class Star
+	canvas: document.getElementById "firework-canvas"
+	constructor: (@rand, @x, @y, @baseHue, config) ->
+		@config = Object.create(config)
+		@cx = @canvas.getContext "2d"
+		@history = []
+		@history.push { x: @x, y: @y } for [0...@config.starTrailLength]
+		@angle = @rand.nextRange 0, 360
+		minSpeed =
+			if @config.starSpeed - @config.starSpeedVariance <= 0 then 1
+			else @config.starSpeed - @config.starSpeedVariance
+		maxSpeed = @config.starSpeed + @config.starSpeedVariance
+		@speed = @rand.nextRange minSpeed, maxSpeed
+		@friction = 1 - @config.starFriction / 100
+		@gravity = @config.starGravity / 2
+		@hue = @rand.nextRange @baseHue - @config.hueVariance, @baseHue + @config.hueVariance
+		@brightness = @rand.nextRange 50, 80
+		@alpha = @rand.nextRange(40, 100) / 100
+		@decay = @rand.nextRange(10, 50) / 1000
+		@wind = (@rand.nextRange(0, @config.starWind) - @config.starWind / 2) / 25
+		@lineWidth = @config.starWidth
+		@lastTime = Date.now()
+		@draw()
+		requestAnimationFrame @update
+
+	update: () =>
+		dt = getDt @lastTime
+		@lastTime = Date.now()
+		radians = @angle * Math.PI / 180
+		vx = Math.cos(radians) * @speed
+		vy = Math.sin(radians) * @speed + @gravity
+		@speed *= @friction
+		for i in [(@config.starTrailLength - 1)...0]
+			@history[i] = @history[i - 1]
+		@history[0] = { x: @x, y: @y }
+		@x += vx * dt
+		@y += vy * dt
+		@angle += @wind
+		@alpha -= @decay
+		if not (@alpha < .05 or @x > @canvas.width + 20 or @x < -20 or @y < -20 or @y > @canvas.height + 20)
+			@draw()
 			requestAnimationFrame @update
-	createParticles: () ->
-		# TODO: Implement
 
+	draw: () ->
+		randCoord = @rand.nextInt @config.starTrailLength
+		@cx.beginPath()
+		@cx.moveTo Math.round(@history[randCoord].x), Math.round(@history[randCoord].y)
+		@cx.lineTo Math.round(@x), Math.round(@y)
+		@cx.closePath()
+		@cx.strokeStyle = "hsla(#{@hue}, 100%, #{@brightness}%, #{@alpha})"
+		@cx.stroke()
+		if @config.flickerDensity > 0
+			inverseDensity = 50 - @config.flickerDensity
+			if @rand.nextRange(0, inverseDensity) is inverseDensity
+				@cx.beginPath()
+				@cx.arc Math.round(@x), Math.round(@y),
+					@rand.nextRange(@config.starWidth, @config.starWidth + 3) / 2,
+					0, Math.PI * 2, false
+				@cx.closePath()
+				randAlpha = @rand.nextRange(50, 100) / 100
+				@cx.fillStyle = "hsla(#{@hue}, 100%, #{@brightness}%, #{randAlpha})"
+				@cx.fill()
 
-
-
-
-
+main()
