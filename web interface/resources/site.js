@@ -115,12 +115,12 @@
       h = this.canvas.height = innerHeight;
       this.hue += .1;
       this._lightness += (this.lightness - this._lightness) * this.damping;
-      this.cx.fillStyle = "hsl(" + this.hue + ", 80%, " + this._lightness + "%)";
       _ref = this.arr;
       _results = [];
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         x = _ref[i];
         x *= .5;
+        this.cx.fillStyle = "hsl(" + (this.hue - x / 255 * 120) + ", 80%, " + this._lightness + "%)";
         _results.push(this.cx.fillRect(Math.floor(i * w / this.arr.length), h * (1 - x / 255), Math.ceil(w / this.arr.length), h * x / 255));
       }
       return _results;
