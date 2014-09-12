@@ -125,7 +125,6 @@ class AudioVisualizer
 		# grad.addColorStop 1, "hsl(#{@hue}, 80%, 10%)"
 		# @cx.fillStyle = grad
 		@_lightness += (@lightness - @_lightness) * @damping
-		@cx.fillStyle = "hsl(#{@hue}, 80%, #{@_lightness}%)"
 		for x, i in @arr
 			x *= .5
 			# x = Math.min 127.5, x + 50 + Math.random() * 50
@@ -138,7 +137,9 @@ class AudioVisualizer
 			else
 				if @gate.length > i
 					reduction = @gate[i]
-			@cx.fillRect i * w // @arr.length, h * (1 - (x - reduction) / 255), Math.ceil(w / @arr.length), h * (x - reduction) / 255
+			x -= reduction
+			@cx.fillStyle = "hsl(#{@hue - x / 255 * 240}, 80%, #{@_lightness}%)"
+			@cx.fillRect i * w // @arr.length, h * (1 - x / 255), Math.ceil(w / @arr.length), h * x / 255
 
 class ParticleVisualizer
 	canvas: document.getElementById "particle-canvas"
