@@ -44,13 +44,14 @@ fireworksName = null
 audioVisualizer = null
 form = document.querySelector "form"
 form.addEventListener "submit", (e) ->
-	return if fireworksName
 	e.preventDefault()
+	return if fireworksName
 	document.body.classList.add "in-fireworks-show"
 	fireworksName = form.name.value
 	setTimeout () ->
 		audioVisualizer.lightness = 8
 	, 3000
+	# TODO: Send name to server
 	new ParticleVisualizer fireworksName
 	new Show fireworksName
 
@@ -210,7 +211,7 @@ class SeededRand
 
 class Show
 	startDelay: 3500
-	showLength: 180
+	showLength: 100
 	fireworksSpawned: 0
 	minInterval: 50
 	maxInterval: 300
@@ -234,6 +235,7 @@ class Show
 			, 3000
 			setTimeout () ->
 				form.name.value = ""
+				fireworksName = null
 				document.body.classList.remove "in-fireworks-show"
 			, 3500
 		new Firework @rand, fireworks.default

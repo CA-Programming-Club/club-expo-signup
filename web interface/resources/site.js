@@ -75,10 +75,10 @@
   form = document.querySelector("form");
 
   form.addEventListener("submit", function(e) {
+    e.preventDefault();
     if (fireworksName) {
       return;
     }
-    e.preventDefault();
     document.body.classList.add("in-fireworks-show");
     fireworksName = form.name.value;
     setTimeout(function() {
@@ -301,7 +301,7 @@
   Show = (function() {
     Show.prototype.startDelay = 3500;
 
-    Show.prototype.showLength = 180;
+    Show.prototype.showLength = 100;
 
     Show.prototype.fireworksSpawned = 0;
 
@@ -329,6 +329,7 @@
         }, 3000);
         setTimeout(function() {
           form.name.value = "";
+          fireworksName = null;
           return document.body.classList.remove("in-fireworks-show");
         }, 3500);
       }
