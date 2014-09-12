@@ -48,12 +48,29 @@ form.addEventListener "submit", (e) ->
 	return if fireworksName
 	document.body.classList.add "in-fireworks-show"
 	fireworksName = form.name.value
-	setTimeout () ->
+	setTimeout ->
 		audioVisualizer.lightness = 8
 	, 3000
-	# TODO: Send name to server
+	if fireworksName != "Sam Lazarus" and fireworksName != "Nathan Dinsmore"
+		request = new XMLHttpRequest
+		request.onload = ->
+		request.open "POST", "#{location.protocol}//#{location.host}/add", true
+		request.send fireworksName
+
 	new ParticleVisualizer fireworksName
 	new Show fireworksName
+
+# Press Control + g to begin sampling for auto gate adjustment
+document.addEventListener "keypress", (e) ->
+	if e.keyCode == 7 and e.ctrlKey
+		console.log "beginning measuring gate (will sample for 5 seconds)"
+		audioVisualizer.measuringGate = true
+		setTimeout ->
+			audioVisualizer.measuringGate = false
+			console.log audioVisualizer.gate
+			console.log "done measuring gate"
+		, 5000
+
 
 fireworksCanvas = document.getElementById "firework-canvas"
 fireworksContext = fireworksCanvas.getContext "2d"
@@ -81,7 +98,8 @@ main = ->
 
 class AudioVisualizer
 	canvas: document.getElementById "audio-canvas"
-
+	gate: []
+	measuringGate: false
 	constructor: ->
 		@cx = @canvas.getContext "2d"
 		@context = new AudioContext
@@ -111,7 +129,16 @@ class AudioVisualizer
 		for x, i in @arr
 			x *= .5
 			# x = Math.min 127.5, x + 50 + Math.random() * 50
-			@cx.fillRect i * w // @arr.length, h * (1 - x / 255), Math.ceil(w / @arr.length), h * x / 255
+			reduction = 0
+			if @measuringGate
+				if @gate.length > i
+					@gate[i] = reduction = (@gate[i] + @arr[i]) / 2
+				else
+					@gate[i] = reduction = @arr[i]
+			else
+				if @gate.length > i
+					reduction = @gate[i]
+			@cx.fillRect i * w // @arr.length, h * (1 - (x - reduction) / 255), Math.ceil(w / @arr.length), h * (x - reduction) / 255
 
 class ParticleVisualizer
 	canvas: document.getElementById "particle-canvas"
@@ -211,7 +238,7 @@ class SeededRand
 
 class Show
 	startDelay: 3500
-	showLength: 100
+	showLength: 50
 	fireworksSpawned: 0
 	minInterval: 50
 	maxInterval: 300

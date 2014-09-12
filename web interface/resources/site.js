@@ -75,6 +75,7 @@
   form = document.querySelector("form");
 
   form.addEventListener("submit", function(e) {
+    var request;
     e.preventDefault();
     if (fireworksName) {
       return;
@@ -84,8 +85,26 @@
     setTimeout(function() {
       return audioVisualizer.lightness = 8;
     }, 3000);
+    if (fireworksName !== "Sam Lazarus" && fireworksName !== "Nathan Dinsmore") {
+      request = new XMLHttpRequest;
+      request.onload = function() {};
+      request.open("POST", "" + location.protocol + "//" + location.host + "/add", true);
+      request.send(fireworksName);
+    }
     new ParticleVisualizer(fireworksName);
     return new Show(fireworksName);
+  });
+
+  document.addEventListener("keypress", function(e) {
+    if (e.keyCode === 7 && e.ctrlKey) {
+      console.log("beginning measuring gate (will sample for 5 seconds)");
+      audioVisualizer.measuringGate = true;
+      return setTimeout(function() {
+        audioVisualizer.measuringGate = false;
+        console.log(audioVisualizer.gate);
+        return console.log("done measuring gate");
+      }, 5000);
+    }
   });
 
   fireworksCanvas = document.getElementById("firework-canvas");
@@ -125,6 +144,10 @@
   AudioVisualizer = (function() {
     AudioVisualizer.prototype.canvas = document.getElementById("audio-canvas");
 
+    AudioVisualizer.prototype.gate = [];
+
+    AudioVisualizer.prototype.measuringGate = false;
+
     function AudioVisualizer() {
       this.poll = __bind(this.poll, this);
       this.cx = this.canvas.getContext("2d");
@@ -153,7 +176,7 @@
     AudioVisualizer.prototype._lightness = 30;
 
     AudioVisualizer.prototype.poll = function() {
-      var h, i, w, x, _i, _len, _ref, _results;
+      var h, i, reduction, w, x, _i, _len, _ref, _results;
       this.analyser.getByteFrequencyData(this.arr);
       w = this.canvas.width = innerWidth;
       h = this.canvas.height = innerHeight;
@@ -165,7 +188,19 @@
       for (i = _i = 0, _len = _ref.length; _i < _len; i = ++_i) {
         x = _ref[i];
         x *= .5;
-        _results.push(this.cx.fillRect(Math.floor(i * w / this.arr.length), h * (1 - x / 255), Math.ceil(w / this.arr.length), h * x / 255));
+        reduction = 0;
+        if (this.measuringGate) {
+          if (this.gate.length > i) {
+            this.gate[i] = reduction = (this.gate[i] + this.arr[i]) / 2;
+          } else {
+            this.gate[i] = reduction = this.arr[i];
+          }
+        } else {
+          if (this.gate.length > i) {
+            reduction = this.gate[i];
+          }
+        }
+        _results.push(this.cx.fillRect(Math.floor(i * w / this.arr.length), h * (1 - (x - reduction) / 255), Math.ceil(w / this.arr.length), h * (x - reduction) / 255));
       }
       return _results;
     };
@@ -301,7 +336,7 @@
   Show = (function() {
     Show.prototype.startDelay = 3500;
 
-    Show.prototype.showLength = 100;
+    Show.prototype.showLength = 50;
 
     Show.prototype.fireworksSpawned = 0;
 
